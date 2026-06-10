@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Фокус</string>
+    <string name="widget_small_desc">Малий віджет — ризик тижня</string>
+    <string name="widget_large_desc">Великий віджет — прогрес і статистика</string>
+</resources>

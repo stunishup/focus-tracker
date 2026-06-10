@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/widget_bg"
+    android:padding="14dp">
+
+    <!-- Header: week dates -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="ЦЬОГО ТИЖНЯ"
+            android:textColor="#FF6B6B80"
+            android:textSize="9sp"
+            android:letterSpacing="0.1"
+            android:textAllCaps="true"/>
+        <TextView
+            android:id="@+id/widget_large_dates"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="пн — нд"
+            android:textColor="#FF6B6B80"
+            android:textSize="10sp"
+            android:fontFamily="monospace"/>
+    </LinearLayout>
+
+    <!-- Progress row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="8dp">
+        <TextView
+            android:id="@+id/widget_large_hours"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0"
+            android:textColor="#FFE8E8F0"
+            android:textSize="32sp"
+            android:textStyle="bold"
+            android:fontFamily="monospace"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=" / "
+            android:textColor="#FF6B6B80"
+            android:textSize="20sp"/>
+        <TextView
+            android:id="@+id/widget_large_goal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="10"
+            android:textColor="#FF6B6B80"
+            android:textSize="20sp"
+            android:fontFamily="monospace"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=" год"
+            android:textColor="#FF6B6B80"
+            android:textSize="12sp"/>
+    </LinearLayout>
+
+    <!-- Progress bar -->
+    <ProgressBar
+        android:id="@+id/widget_large_bar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="6dp"
+        android:layout_marginTop="6dp"
+        android:progressDrawable="@drawable/progress_bar_drawable"
+        android:max="100"
+        android:progress="0"/>
+
+    <!-- Risk text -->
+    <TextView
+        android:id="@+id/widget_large_risk"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:text="Ризик втратити 10 годин"
+        android:textColor="#FFEF4444"
+        android:textSize="11sp"
+        android:textStyle="bold"/>
+
+    <!-- Divider -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="8dp"
+        android:background="#FF2A2A35"/>
+
+    <!-- All time stats -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="✅ Використано"
+                android:textColor="#FF6B6B80"
+                android:textSize="9sp"/>
+            <TextView
+                android:id="@+id/widget_large_used"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0 год"
+                android:textColor="#FF22C55E"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:fontFamily="monospace"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="❌ Втрачено"
+                android:textColor="#FF6B6B80"
+                android:textSize="9sp"/>
+            <TextView
+                android:id="@+id/widget_large_lost"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0 год"
+                android:textColor="#FFEF4444"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:fontFamily="monospace"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="⚡ Понад норму"
+                android:textColor="#FF6B6B80"
+                android:textSize="9sp"/>
+            <TextView
+                android:id="@+id/widget_large_over"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0 год"
+                android:textColor="#FFF59E0B"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:fontFamily="monospace"/>
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="10dp"
+        android:gravity="center_vertical">
+
+        <Button
+            android:id="@+id/widget_large_btn_add"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_weight="1"
+            android:text="+ 1 година"
+            android:textSize="12sp"
+            android:textColor="#FFFFFFFF"
+            android:background="@drawable/btn_bg"/>
+
+        <Button
+            android:id="@+id/widget_large_btn_open"
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:layout_marginLeft="8dp"
+            android:text="відкрити →"
+            android:textSize="11sp"
+            android:textColor="#FF9D7DFF"
+            android:background="@drawable/btn_outline_bg"/>
+    </LinearLayout>
+</LinearLayout>
