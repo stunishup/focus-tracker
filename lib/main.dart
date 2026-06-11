@@ -4,13 +4,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:intl/intl.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  HomeWidget.setAppGroupId('com.profitbutton.focus');
+  try {
+    await HomeWidget.setAppGroupId('com.profitbutton.focus');
+  } catch (e) {
+    // ignore
+  }
   runApp(const FocusApp());
 }
-
-// ─── DATA MODEL ──────────────────────────────────────────────────────────────
 
 class WeekRecord {
   final String weekStart;
@@ -23,14 +25,10 @@ class WeekRecord {
   final bool full;
 
   WeekRecord({
-    required this.weekStart,
-    required this.weekEnd,
-    required this.hours,
-    required this.goal,
-    required this.used,
-    required this.lost,
-    required this.over,
-    required this.full,
+    required this.weekStart, required this.weekEnd,
+    required this.hours, required this.goal,
+    required this.used, required this.lost,
+    required this.over, required this.full,
   });
 
   Map<String, dynamic> toJson() => {
@@ -57,101 +55,107 @@ class AppState extends ChangeNotifier {
   int fullWeeks = 0;
   int totalWeeks = 0;
   List<WeekRecord> history = [];
-
   bool _loaded = false;
 
-  // Derived
   int get overtime => (currentHours - goal).clamp(0, 999);
   int get risk => (goal - currentHours).clamp(0, goal);
   bool get weekDone => currentHours >= goal;
   double get progress => (currentHours / goal).clamp(0.0, 1.0);
 
   String get weekEnd {
+    if (currentWeekStart.isEmpty) return '';
     final start = _parseDate(currentWeekStart);
     final end = start.add(const Duration(days: 6));
     return _formatDate(end);
   }
 
-  String get weekStartFormatted => _formatDate(_parseDate(currentWeekStart));
+  String get weekStartFormatted {
+    if (currentWeekStart.isEmpty) return '';
+    return _formatDate(_parseDate(currentWeekStart));
+  }
 
   Future<void> load() async {
     if (_loaded) return;
-    final prefs = await SharedPreferences.getInstance();
-    goal = prefs.getInt('goal') ?? 10;
-    currentWeekStart = prefs.getString('currentWeekStart') ?? _getWeekStart(DateTime.now());
-    currentHours = prefs.getInt('currentHours') ?? 0;
-    totalUsed = prefs.getInt('totalUsed') ?? 0;
-    totalLost = prefs.getInt('totalLost') ?? 0;
-    totalOvertime = prefs.getInt('totalOvertime') ?? 0;
-    streak = prefs.getInt('streak') ?? 0;
-    fullWeeks = prefs.getInt('fullWeeks') ?? 0;
-    totalWeeks = prefs.getInt('totalWeeks') ?? 0;
-    final histJson = prefs.getString('history') ?? '[]';
-    final histList = jsonDecode(histJson) as List;
-    history = histList.map((e) => WeekRecord.fromJson(e)).toList();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      goal = prefs.getInt('goal') ?? 10;
+      currentWeekStart = prefs.getString('currentWeekStart') ?? _getWeekStart(DateTime.now());
+      currentHours = prefs.getInt('currentHours') ?? 0;
+      totalUsed = prefs.getInt('totalUsed') ?? 0;
+      totalLost = prefs.getInt('totalLost') ?? 0;
+      totalOvertime = prefs.getInt('totalOvertime') ?? 0;
+      streak = prefs.getInt('streak') ?? 0;
+      fullWeeks = prefs.getInt('fullWeeks') ?? 0;
+      totalWeeks = prefs.getInt('totalWeeks') ?? 0;
+      final histJson = prefs.getString('history') ?? '[]';
+      final histList = jsonDecode(histJson) as List;
+      history = histList.map((e) => WeekRecord.fromJson(e as Map<String, dynamic>)).toList();
+    } catch (e) {
+      currentWeekStart = _getWeekStart(DateTime.now());
+    }
     _loaded = true;
     _checkAndCloseWeek();
     notifyListeners();
   }
 
   Future<void> _save() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('goal', goal);
-    await prefs.setString('currentWeekStart', currentWeekStart);
-    await prefs.setInt('currentHours', currentHours);
-    await prefs.setInt('totalUsed', totalUsed);
-    await prefs.setInt('totalLost', totalLost);
-    await prefs.setInt('totalOvertime', totalOvertime);
-    await prefs.setInt('streak', streak);
-    await prefs.setInt('fullWeeks', fullWeeks);
-    await prefs.setInt('totalWeeks', totalWeeks);
-    await prefs.setString('history', jsonEncode(history.map((e) => e.toJson()).toList()));
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('goal', goal);
+      await prefs.setString('currentWeekStart', currentWeekStart);
+      await prefs.setInt('currentHours', currentHours);
+      await prefs.setInt('totalUsed', totalUsed);
+      await prefs.setInt('totalLost', totalLost);
+      await prefs.setInt('totalOvertime', totalOvertime);
+      await prefs.setInt('streak', streak);
+      await prefs.setInt('fullWeeks', fullWeeks);
+      await prefs.setInt('totalWeeks', totalWeeks);
+      await prefs.setString('history', jsonEncode(history.map((e) => e.toJson()).toList()));
+    } catch (e) {
+      // ignore
+    }
     await _updateWidget();
   }
 
   Future<void> _updateWidget() async {
-    final riskText = weekDone
-        ? overtime > 0
-            ? 'Жодної не втрачено +$overtime ⚡'
-            : 'Жодної години не втрачено ✓'
-        : 'Ризик втратити $risk ${_hoursWord(risk)}';
-
-    await HomeWidget.saveWidgetData<String>('risk_text', riskText);
-    await HomeWidget.saveWidgetData<bool>('week_done', weekDone);
-    await HomeWidget.saveWidgetData<int>('current_hours', currentHours.clamp(0, goal));
-    await HomeWidget.saveWidgetData<int>('goal', goal);
-    await HomeWidget.saveWidgetData<int>('overtime', overtime);
-    await HomeWidget.saveWidgetData<int>('total_used', totalUsed);
-    await HomeWidget.saveWidgetData<int>('total_lost', totalLost);
-    await HomeWidget.saveWidgetData<int>('total_overtime', totalOvertime);
-    await HomeWidget.saveWidgetData<String>('week_dates', '$weekStartFormatted — $weekEnd');
-    await HomeWidget.updateWidget(
-      androidName: 'FocusWidgetSmall',
-    );
-    await HomeWidget.updateWidget(
-      androidName: 'FocusWidgetLarge',
-    );
+    try {
+      final riskText = weekDone
+          ? overtime > 0 ? 'Жодної не втрачено +$overtime ⚡' : 'Жодної години не втрачено ✓'
+          : 'Ризик втратити $risk ${_hoursWord(risk)}';
+      await HomeWidget.saveWidgetData<String>('risk_text', riskText);
+      await HomeWidget.saveWidgetData<bool>('week_done', weekDone);
+      await HomeWidget.saveWidgetData<int>('current_hours', currentHours.clamp(0, goal));
+      await HomeWidget.saveWidgetData<int>('goal', goal);
+      await HomeWidget.saveWidgetData<int>('overtime', overtime);
+      await HomeWidget.saveWidgetData<int>('total_used', totalUsed);
+      await HomeWidget.saveWidgetData<int>('total_lost', totalLost);
+      await HomeWidget.saveWidgetData<int>('total_overtime', totalOvertime);
+      await HomeWidget.saveWidgetData<String>('week_dates', '$weekStartFormatted — $weekEnd');
+      await HomeWidget.updateWidget(androidName: 'FocusWidgetSmall');
+      await HomeWidget.updateWidget(androidName: 'FocusWidgetLarge');
+    } catch (e) {
+      // ignore
+    }
   }
 
   void _checkAndCloseWeek() {
+    if (currentWeekStart.isEmpty) {
+      currentWeekStart = _getWeekStart(DateTime.now());
+      return;
+    }
     final todayWeekStart = _getWeekStart(DateTime.now());
     if (currentWeekStart != todayWeekStart) {
       final used = currentHours.clamp(0, goal);
       final lost = (goal - currentHours).clamp(0, goal);
       final over = (currentHours - goal).clamp(0, 999);
-      totalUsed += used;
-      totalLost += lost;
-      totalOvertime += over;
-      totalWeeks += 1;
+      totalUsed += used; totalLost += lost; totalOvertime += over; totalWeeks += 1;
       final isFull = currentHours >= goal;
       if (isFull) { streak += 1; fullWeeks += 1; } else { streak = 0; }
       final startD = _parseDate(currentWeekStart);
       final endD = startD.add(const Duration(days: 6));
       history.insert(0, WeekRecord(
-        weekStart: currentWeekStart,
-        weekEnd: _formatDate(endD),
-        hours: currentHours,
-        goal: goal,
+        weekStart: currentWeekStart, weekEnd: _formatDate(endD),
+        hours: currentHours, goal: goal,
         used: used, lost: lost, over: over, full: isFull,
       ));
       currentWeekStart = todayWeekStart;
@@ -182,30 +186,27 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> resetAll() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
-    goal = 10;
-    currentWeekStart = _getWeekStart(DateTime.now());
-    currentHours = 0;
-    totalUsed = 0; totalLost = 0; totalOvertime = 0;
-    streak = 0; fullWeeks = 0; totalWeeks = 0;
-    history = [];
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+    } catch (e) {
+      // ignore
+    }
+    goal = 10; currentWeekStart = _getWeekStart(DateTime.now());
+    currentHours = 0; totalUsed = 0; totalLost = 0; totalOvertime = 0;
+    streak = 0; fullWeeks = 0; totalWeeks = 0; history = [];
     notifyListeners();
     await _save();
   }
 
-  // ─── HELPERS ───────────────────────────────────────────────────────────────
   static String _getWeekStart(DateTime date) {
     final d = DateTime(date.year, date.month, date.day);
-    final weekday = d.weekday; // 1=mon, 7=sun
-    final start = d.subtract(Duration(days: weekday - 1));
+    final start = d.subtract(Duration(days: d.weekday - 1));
     return DateFormat('yyyy-MM-dd').format(start);
   }
 
   static DateTime _parseDate(String s) => DateFormat('yyyy-MM-dd').parse(s);
-
-  static String _formatDate(DateTime d) =>
-      DateFormat('dd MMM', 'uk').format(d);
+  static String _formatDate(DateTime d) => DateFormat('dd MMM', 'uk').format(d);
 
   static String _hoursWord(int n) {
     if (n % 100 >= 11 && n % 100 <= 19) return 'годин';
@@ -221,7 +222,6 @@ class AppState extends ChangeNotifier {
 
 class FocusApp extends StatelessWidget {
   const FocusApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
@@ -236,7 +236,6 @@ class FocusApp extends StatelessWidget {
             primary: Color(0xFF7C5CFC),
             surface: Color(0xFF141417),
           ),
-          fontFamily: 'Inter',
         ),
         home: const MainScreen(),
       ),
@@ -244,15 +243,12 @@ class FocusApp extends StatelessWidget {
   }
 }
 
-// ignore: prefer_const_constructors
 class ChangeNotifierProvider<T extends ChangeNotifier> extends StatefulWidget {
   final T Function(BuildContext) create;
   final Widget child;
   const ChangeNotifierProvider({super.key, required this.create, required this.child});
-
   @override
   State<ChangeNotifierProvider<T>> createState() => _CNPState<T>();
-
   static T of<T extends ChangeNotifier>(BuildContext context) {
     return context.findAncestorStateOfType<_CNPState<T>>()!.notifier;
   }
@@ -260,17 +256,14 @@ class ChangeNotifierProvider<T extends ChangeNotifier> extends StatefulWidget {
 
 class _CNPState<T extends ChangeNotifier> extends State<ChangeNotifierProvider<T>> {
   late T notifier;
-
   @override
   void initState() {
     super.initState();
     notifier = widget.create(context);
     notifier.addListener(() { if (mounted) setState(() {}); });
   }
-
   @override
   void dispose() { notifier.dispose(); super.dispose(); }
-
   @override
   Widget build(BuildContext context) => widget.child;
 }
@@ -285,7 +278,6 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _tab = 0;
-
   @override
   Widget build(BuildContext context) {
     final state = ChangeNotifierProvider.of<AppState>(context);
@@ -295,7 +287,6 @@ class _MainScreenState extends State<MainScreen> {
       HistoryTab(state: state),
       SettingsTab(state: state),
     ];
-
     return Scaffold(
       body: pages[_tab],
       bottomNavigationBar: NavigationBar(
@@ -325,122 +316,116 @@ class HomeTab extends StatelessWidget {
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 8),
-            _card(children: [
-              _label('ПОТОЧНИЙ ТИЖДЕНЬ'),
-              const SizedBox(height: 4),
-              Text('${state.weekStartFormatted} — ${state.weekEnd}',
-                style: const TextStyle(fontFamily: 'JetBrainsMono', fontSize: 13, color: Color(0xFF6B6B80))),
-              const SizedBox(height: 20),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic,
-                children: [
-                  Text('${state.currentHours.clamp(0, state.goal)}',
-                    style: const TextStyle(fontFamily: 'JetBrainsMono', fontSize: 52, fontWeight: FontWeight.w700)),
-                  const Text(' / ', style: TextStyle(fontSize: 28, color: Color(0xFF6B6B80))),
-                  Text('${state.goal}', style: const TextStyle(fontFamily: 'JetBrainsMono', fontSize: 28, color: Color(0xFF6B6B80))),
-                  const SizedBox(width: 6),
-                  const Text('год', style: TextStyle(fontSize: 14, color: Color(0xFF6B6B80))),
-                ],
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const SizedBox(height: 8),
+          _card(children: [
+            _label('ПОТОЧНИЙ ТИЖДЕНЬ'),
+            const SizedBox(height: 4),
+            Text('${state.weekStartFormatted} — ${state.weekEnd}',
+              style: const TextStyle(fontSize: 13, color: Color(0xFF6B6B80))),
+            const SizedBox(height: 20),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
+              children: [
+                Text('${state.currentHours.clamp(0, state.goal)}',
+                  style: const TextStyle(fontSize: 52, fontWeight: FontWeight.w700)),
+                const Text(' / ', style: TextStyle(fontSize: 28, color: Color(0xFF6B6B80))),
+                Text('${state.goal}', style: const TextStyle(fontSize: 28, color: Color(0xFF6B6B80))),
+                const SizedBox(width: 6),
+                const Text('год', style: TextStyle(fontSize: 14, color: Color(0xFF6B6B80))),
+              ],
+            ),
+            const SizedBox(height: 12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(99),
+              child: LinearProgressIndicator(
+                value: state.progress, minHeight: 10,
+                backgroundColor: const Color(0xFF1C1C22),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  state.weekDone ? const Color(0xFF22C55E) : const Color(0xFF7C5CFC),
+                ),
               ),
+            ),
+            if (state.weekDone) ...[
               const SizedBox(height: 12),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(99),
-                child: LinearProgressIndicator(
-                  value: state.progress,
-                  minHeight: 10,
-                  backgroundColor: const Color(0xFF1C1C22),
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    state.weekDone ? const Color(0xFF22C55E) : const Color(0xFF7C5CFC),
-                  ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF22C55E).withOpacity(0.1),
+                  border: Border.all(color: const Color(0xFF22C55E).withOpacity(0.25)),
+                  borderRadius: BorderRadius.circular(99),
                 ),
+                child: const Text('✓  ТИЖДЕНЬ ВИКОНАНО',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF22C55E))),
               ),
-              if (state.weekDone) ...[
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF22C55E).withOpacity(0.1),
-                    border: Border.all(color: const Color(0xFF22C55E).withOpacity(0.25)),
-                    borderRadius: BorderRadius.circular(99),
-                  ),
-                  child: const Text('✓  ТИЖДЕНЬ ВИКОНАНО',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600,
-                        color: Color(0xFF22C55E), letterSpacing: 0.08)),
+            ],
+            if (state.overtime > 0) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF59E0B).withOpacity(0.08),
+                  border: Border.all(color: const Color(0xFFF59E0B).withOpacity(0.2)),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-              ],
-              if (state.overtime > 0) ...[
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF59E0B).withOpacity(0.08),
-                    border: Border.all(color: const Color(0xFFF59E0B).withOpacity(0.2)),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(children: [
-                    Container(width: 8, height: 8, decoration: const BoxDecoration(
-                        color: Color(0xFFF59E0B), shape: BoxShape.circle)),
-                    const SizedBox(width: 8),
-                    const Text('Понаднормово', style: TextStyle(fontSize: 13, color: Color(0xFFF59E0B))),
-                    const Spacer(),
-                    Text('+${state.overtime} год',
-                      style: const TextStyle(fontFamily: 'JetBrainsMono', fontSize: 14,
-                          fontWeight: FontWeight.w600, color: Color(0xFFF59E0B))),
-                  ]),
-                ),
-              ],
-              if (!state.weekDone) ...[
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEF4444).withOpacity(0.06),
-                    border: Border.all(color: const Color(0xFFEF4444).withOpacity(0.15)),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(children: [
-                    Container(width: 8, height: 8, decoration: const BoxDecoration(
-                        color: Color(0xFFEF4444), shape: BoxShape.circle)),
-                    const SizedBox(width: 8),
-                    Text('Ризик втратити ${state.risk} ${AppState._hoursWord(state.risk)}',
-                      style: const TextStyle(fontSize: 13, color: Color(0xFFEF4444))),
-                  ]),
-                ),
-              ],
-            ]),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: state.addHour,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF7C5CFC),
-                  padding: const EdgeInsets.symmetric(vertical: 18),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                ),
-                child: const Text('+ 1 година', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
+                child: Row(children: [
+                  Container(width: 8, height: 8,
+                    decoration: const BoxDecoration(color: Color(0xFFF59E0B), shape: BoxShape.circle)),
+                  const SizedBox(width: 8),
+                  const Text('Понаднормово', style: TextStyle(fontSize: 13, color: Color(0xFFF59E0B))),
+                  const Spacer(),
+                  Text('+${state.overtime} год',
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFFF59E0B))),
+                ]),
               ),
+            ],
+            if (!state.weekDone) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEF4444).withOpacity(0.06),
+                  border: Border.all(color: const Color(0xFFEF4444).withOpacity(0.15)),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(children: [
+                  Container(width: 8, height: 8,
+                    decoration: const BoxDecoration(color: Color(0xFFEF4444), shape: BoxShape.circle)),
+                  const SizedBox(width: 8),
+                  Text('Ризик втратити ${state.risk} ${AppState._hoursWord(state.risk)}',
+                    style: const TextStyle(fontSize: 13, color: Color(0xFFEF4444))),
+                ]),
+              ),
+            ],
+          ]),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: state.addHour,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF7C5CFC),
+                padding: const EdgeInsets.symmetric(vertical: 18),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              ),
+              child: const Text('+ 1 година', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
             ),
-            const SizedBox(height: 10),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton(
-                onPressed: () => _showManualInput(context, state),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  side: const BorderSide(color: Color(0xFF2A2A35)),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                ),
-                child: const Text('Ввести вручну', style: TextStyle(color: Color(0xFF6B6B80))),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              onPressed: () => _showManualInput(context, state),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                side: const BorderSide(color: Color(0xFF2A2A35)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               ),
+              child: const Text('Ввести вручну', style: TextStyle(color: Color(0xFF6B6B80))),
             ),
-          ],
-        ),
+          ),
+        ]),
       ),
     );
   }
@@ -462,11 +447,9 @@ class HomeTab extends StatelessWidget {
             style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
           const SizedBox(height: 16),
           TextField(
-            controller: ctrl,
-            autofocus: true,
-            keyboardType: TextInputType.number,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontFamily: 'JetBrainsMono', fontSize: 32),
+            controller: ctrl, autofocus: true,
+            keyboardType: TextInputType.number, textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 32),
             decoration: InputDecoration(
               filled: true, fillColor: const Color(0xFF1C1C22),
               border: OutlineInputBorder(
@@ -551,23 +534,19 @@ class StatsTab extends StatelessWidget {
               ),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 const Text('📉  БЕЗПОВОРОТНО ВТРАЧЕНО',
-                  style: TextStyle(fontSize: 11, letterSpacing: 0.08,
-                      color: Color(0xFFEF4444), fontWeight: FontWeight.w600)),
+                  style: TextStyle(fontSize: 11, color: Color(0xFFEF4444), fontWeight: FontWeight.w600)),
                 const SizedBox(height: 10),
                 Text.rich(TextSpan(
                   style: const TextStyle(fontSize: 14, height: 1.6),
                   children: [
                     TextSpan(text: '${state.totalLost} год',
-                      style: const TextStyle(fontFamily: 'JetBrainsMono',
-                          color: Color(0xFFEF4444), fontWeight: FontWeight.w600)),
+                      style: const TextStyle(color: Color(0xFFEF4444), fontWeight: FontWeight.w600)),
                     const TextSpan(text: ' безповоротно пішло не на агенцію.\nЦе '),
                     TextSpan(text: '${(state.totalLost / 8).toStringAsFixed(1)} роб. днів',
-                      style: const TextStyle(fontFamily: 'JetBrainsMono',
-                          color: Color(0xFFEF4444), fontWeight: FontWeight.w600)),
+                      style: const TextStyle(color: Color(0xFFEF4444), fontWeight: FontWeight.w600)),
                     const TextSpan(text: ' або '),
                     TextSpan(text: '${(state.totalLost / 40).toStringAsFixed(1)} тижнів',
-                      style: const TextStyle(fontFamily: 'JetBrainsMono',
-                          color: Color(0xFFEF4444), fontWeight: FontWeight.w600)),
+                      style: const TextStyle(color: Color(0xFFEF4444), fontWeight: FontWeight.w600)),
                     const TextSpan(text: ' повного фокусу,\nяких більше немає.'),
                   ],
                 )),
@@ -590,11 +569,9 @@ class StatsTab extends StatelessWidget {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(icon, style: const TextStyle(fontSize: 18)),
         const SizedBox(height: 8),
-        Text(val, style: TextStyle(fontFamily: 'JetBrainsMono',
-            fontSize: 26, fontWeight: FontWeight.w700, color: color)),
+        Text(val, style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: color)),
         const SizedBox(height: 4),
-        Text(label, style: const TextStyle(fontSize: 11,
-            color: Color(0xFF6B6B80), letterSpacing: 0.05)),
+        Text(label, style: const TextStyle(fontSize: 11, color: Color(0xFF6B6B80))),
       ]),
     );
 
@@ -603,8 +580,7 @@ class StatsTab extends StatelessWidget {
     child: Row(children: [
       Text(label, style: const TextStyle(fontSize: 14, color: Color(0xFF6B6B80))),
       const Spacer(),
-      Text(val, style: TextStyle(fontFamily: 'JetBrainsMono',
-          fontSize: 16, fontWeight: FontWeight.w600, color: color)),
+      Text(val, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: color)),
     ]),
   );
 }
@@ -645,8 +621,7 @@ class HistoryTab extends StatelessWidget {
                     Text('${w.weekStart} — ${w.weekEnd}',
                       style: const TextStyle(fontSize: 12, color: Color(0xFF6B6B80))),
                     Text('${w.hours} / ${w.goal} год',
-                      style: const TextStyle(fontFamily: 'JetBrainsMono',
-                          fontSize: 14, fontWeight: FontWeight.w600)),
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
                   ])),
                   Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
                     Text(w.full ? '✓ виконано' : '✗ ${w.lost} год недобрано',
@@ -693,8 +668,7 @@ class SettingsTab extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: Text('${state.goal}',
-                      style: const TextStyle(fontFamily: 'JetBrainsMono',
-                          fontSize: 22, fontWeight: FontWeight.w700)),
+                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
                   ),
                   _iconBtn(Icons.add, () => state.setGoal(state.goal + 1)),
                 ]),
