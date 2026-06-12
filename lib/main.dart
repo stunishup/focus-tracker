@@ -74,7 +74,6 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> load() async {
-    if (_loaded) return;
     try {
       final prefs = await SharedPreferences.getInstance();
       goal = prefs.getInt('goal') ?? 10;
@@ -227,12 +226,39 @@ class AppState extends ChangeNotifier {
 
 // ─── APP ─────────────────────────────────────────────────────────────────────
 
-class FocusApp extends StatelessWidget {
+class FocusApp extends StatefulWidget {
   const FocusApp({super.key});
+  @override
+  State<FocusApp> createState() => _FocusAppState();
+}
+
+class _FocusAppState extends State<FocusApp> with WidgetsBindingObserver {
+  late AppState _appState;
+
+  @override
+  void initState() {
+    super.initState();
+    _appState = AppState()..load();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _appState.load(); // re-read from SharedPreferences when app comes to foreground
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => AppState()..load(),
+      create: (_) => _appState,
       child: MaterialApp(
         title: 'Фокус',
         debugShowCheckedModeBanner: false,
