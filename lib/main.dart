@@ -55,6 +55,7 @@ class AppState extends ChangeNotifier {
   int totalWeeks = 0;
   List<WeekRecord> history = [];
   bool _loaded = false;
+  bool get isLoaded => _loaded;
 
   int get overtime => (currentHours - goal).clamp(0, 999);
   int get risk => (goal - currentHours).clamp(0, goal);
@@ -95,6 +96,12 @@ class AppState extends ChangeNotifier {
     _loaded = true;
     _checkAndCloseWeek();
     notifyListeners();
+  }
+
+  Future<void> reloadFromDisk() async {
+    _loaded = false;
+    notifyListeners();
+    await load();
   }
 
   Future<void> _save() async {
@@ -252,7 +259,7 @@ class _FocusAppState extends State<FocusApp> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      _appState.load(); // re-read from SharedPreferences when app comes to foreground
+      _appState.reloadFromDisk(); // re-read from SharedPreferences when app comes to foreground
     }
   }
 
@@ -326,6 +333,11 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ChangeNotifierProvider.of<AppState>(context);
+    if (!state.isLoaded) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator(color: Color(0xFF7C5CFC))),
+      );
+    }
     final pages = [
       HomeTab(state: state),
       StatsTab(state: state),
