@@ -333,6 +333,13 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ChangeNotifierProvider.of<AppState>(context);
+    return ListenableBuilder(
+      listenable: state,
+      builder: (context, _) => _buildBody(context, state),
+    );
+  }
+
+  Widget _buildBody(BuildContext context, AppState state) {
     if (!state.isLoaded) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator(color: Color(0xFF7C5CFC))),
