@@ -76,6 +76,7 @@ class AppState extends ChangeNotifier {
   Future<void> load() async {
     try {
       final prefs = await SharedPreferences.getInstance();
+      await prefs.reload();
       goal = prefs.getInt('goal') ?? 10;
       currentWeekStart = prefs.getString('currentWeekStart') ?? _getWeekStart(DateTime.now());
       currentHours = prefs.getInt('currentHours') ?? 0;
