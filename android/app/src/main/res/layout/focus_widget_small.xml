@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@drawable/widget_bg"
+    android:background="#E6141417"
     android:padding="12dp"
     android:gravity="center_vertical">
 
@@ -42,10 +42,9 @@
             android:text="+1"
             android:textSize="12sp"
             android:textColor="#FFFFFFFF"
-            android:background="@drawable/btn_bg"
+            android:background="#FF7C5CFC"
             android:gravity="center"
-            android:paddingLeft="12dp"
-            android:paddingRight="12dp"
-            android:clickable="true"/>
+            android:paddingLeft="14dp"
+            android:paddingRight="14dp"/>
     </LinearLayout>
 </LinearLayout>

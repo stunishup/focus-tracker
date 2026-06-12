@@ -71,7 +71,6 @@ public class FocusWidgetLarge extends AppWidgetProvider {
         views.setTextViewText(R.id.widget_large_dates, weekDates);
         views.setTextViewText(R.id.widget_large_hours, String.valueOf(displayHours));
         views.setTextViewText(R.id.widget_large_goal, String.valueOf(goal));
-        views.setProgressBar(R.id.widget_large_bar, 100, progress, false);
         views.setTextViewText(R.id.widget_large_risk, riskText);
         views.setTextColor(R.id.widget_large_risk, riskColor);
         views.setTextViewText(R.id.widget_large_used, totalUsed + " год");

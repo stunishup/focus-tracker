@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@drawable/widget_bg"
+    android:background="#E6141417"
     android:padding="14dp">
 
     <LinearLayout
@@ -18,8 +18,7 @@
             android:layout_weight="1"
             android:text="ЦЬОГО ТИЖНЯ"
             android:textColor="#FF6B6B80"
-            android:textSize="9sp"
-            android:textAllCaps="true"/>
+            android:textSize="9sp"/>
         <TextView
             android:id="@+id/widget_large_dates"
             android:layout_width="wrap_content"
@@ -64,37 +63,21 @@
             android:textSize="12sp"/>
     </LinearLayout>
 
-    <ProgressBar
-        android:id="@+id/widget_large_bar"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="match_parent"
-        android:layout_height="6dp"
-        android:layout_marginTop="6dp"
-        android:progressDrawable="@drawable/progress_bar_drawable"
-        android:max="100"
-        android:progress="0"/>
-
     <TextView
         android:id="@+id/widget_large_risk"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
+        android:layout_marginTop="8dp"
         android:text="Ризик втратити 10 годин"
         android:textColor="#FFEF4444"
         android:textSize="11sp"
         android:textStyle="bold"/>
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginTop="10dp"
-        android:layout_marginBottom="8dp"
-        android:background="#FF2A2A35"/>
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:layout_marginTop="10dp">
 
         <LinearLayout
             android:layout_width="0dp"
@@ -160,38 +143,35 @@
         </LinearLayout>
     </LinearLayout>
 
-    <!-- Buttons as TextView - MIUI compatible -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="12dp"
         android:gravity="center_vertical">
 
         <TextView
             android:id="@+id/widget_large_btn_add"
             android:layout_width="0dp"
-            android:layout_height="32dp"
+            android:layout_height="34dp"
             android:layout_weight="1"
             android:text="+ 1 година"
             android:textSize="12sp"
             android:textColor="#FFFFFFFF"
-            android:background="@drawable/btn_bg"
-            android:gravity="center"
-            android:clickable="true"/>
+            android:background="#FF7C5CFC"
+            android:gravity="center"/>
 
         <TextView
             android:id="@+id/widget_large_btn_open"
             android:layout_width="wrap_content"
-            android:layout_height="32dp"
+            android:layout_height="34dp"
             android:layout_marginLeft="8dp"
-            android:text="відкрити →"
+            android:text="відкрити"
             android:textSize="11sp"
             android:textColor="#FF9D7DFF"
-            android:background="@drawable/btn_outline_bg"
+            android:background="#1A7C5CFC"
             android:gravity="center"
-            android:paddingLeft="10dp"
-            android:paddingRight="10dp"
-            android:clickable="true"/>
+            android:paddingLeft="12dp"
+            android:paddingRight="12dp"/>
     </LinearLayout>
 </LinearLayout>
