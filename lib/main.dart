@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:home_widget/home_widget.dart';
-import 'package:intl/intl.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -60,7 +59,7 @@ class AppState extends ChangeNotifier {
   int get overtime => (currentHours - goal).clamp(0, 999);
   int get risk => (goal - currentHours).clamp(0, goal);
   bool get weekDone => currentHours >= goal;
-  double get progress => (currentHours / goal).clamp(0.0, 1.0);
+  double get progress => goal > 0 ? (currentHours / goal).clamp(0.0, 1.0) : 0.0;
 
   String get weekEnd {
     if (currentWeekStart.isEmpty) return '';
@@ -70,7 +69,7 @@ class AppState extends ChangeNotifier {
   }
 
   String get weekStartFormatted {
-    if (currentWeekStart.isEmpty) return '';
+    if (currentWeekStart.isEmpty) return '—';
     return _formatDate(_parseDate(currentWeekStart));
   }
 
@@ -199,14 +198,22 @@ class AppState extends ChangeNotifier {
     await _save();
   }
 
+  // Без intl — ручне форматування щоб уникнути краша локалі
   static String _getWeekStart(DateTime date) {
     final d = DateTime(date.year, date.month, date.day);
     final start = d.subtract(Duration(days: d.weekday - 1));
-    return DateFormat('yyyy-MM-dd').format(start);
+    return '${start.year}-${start.month.toString().padLeft(2,'0')}-${start.day.toString().padLeft(2,'0')}';
   }
 
-  static DateTime _parseDate(String s) => DateFormat('yyyy-MM-dd').parse(s);
-  static String _formatDate(DateTime d) => DateFormat('dd MMM', 'uk').format(d);
+  static DateTime _parseDate(String s) {
+    final parts = s.split('-');
+    return DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
+  }
+
+  static const _months = ['', 'січ', 'лют', 'бер', 'кві', 'тра', 'чер',
+                               'лип', 'сер', 'вер', 'жов', 'лис', 'гру'];
+
+  static String _formatDate(DateTime d) => '${d.day} ${_months[d.month]}';
 
   static String _hoursWord(int n) {
     if (n % 100 >= 11 && n % 100 <= 19) return 'годин';
@@ -232,9 +239,20 @@ class FocusApp extends StatelessWidget {
         theme: ThemeData(
           brightness: Brightness.dark,
           scaffoldBackgroundColor: const Color(0xFF0D0D0F),
-          colorScheme: const ColorScheme.dark(
-            primary: Color(0xFF7C5CFC),
-            surface: Color(0xFF141417),
+          colorScheme: ColorScheme.dark(
+            primary: const Color(0xFF7C5CFC),
+            surface: const Color(0xFF141417),
+            onPrimary: Colors.white,
+            onSurface: Colors.white,
+          ),
+          elevatedButtonTheme: ElevatedButtonThemeData(
+            style: ElevatedButton.styleFrom(
+              foregroundColor: Colors.white,
+              backgroundColor: const Color(0xFF7C5CFC),
+            ),
+          ),
+          textTheme: const TextTheme(
+            bodyMedium: TextStyle(color: Colors.white),
           ),
         ),
         home: const MainScreen(),
@@ -314,7 +332,7 @@ class HomeTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           const SizedBox(height: 8),
@@ -329,7 +347,7 @@ class HomeTab extends StatelessWidget {
               textBaseline: TextBaseline.alphabetic,
               children: [
                 Text('${state.currentHours.clamp(0, state.goal)}',
-                  style: const TextStyle(fontSize: 52, fontWeight: FontWeight.w700)),
+                  style: const TextStyle(fontSize: 52, fontWeight: FontWeight.w700, color: Colors.white)),
                 const Text(' / ', style: TextStyle(fontSize: 28, color: Color(0xFF6B6B80))),
                 Text('${state.goal}', style: const TextStyle(fontSize: 28, color: Color(0xFF6B6B80))),
                 const SizedBox(width: 6),
@@ -406,10 +424,12 @@ class HomeTab extends StatelessWidget {
               onPressed: state.addHour,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF7C5CFC),
+                foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 18),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               ),
-              child: const Text('+ 1 година', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
+              child: const Text('+ 1 година',
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: Colors.white)),
             ),
           ),
           const SizedBox(height: 10),
@@ -418,11 +438,13 @@ class HomeTab extends StatelessWidget {
             child: OutlinedButton(
               onPressed: () => _showManualInput(context, state),
               style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFF6B6B80),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 side: const BorderSide(color: Color(0xFF2A2A35)),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               ),
-              child: const Text('Ввести вручну', style: TextStyle(color: Color(0xFF6B6B80))),
+              child: const Text('Ввести вручну',
+                style: TextStyle(color: Color(0xFF6B6B80))),
             ),
           ),
         ]),
@@ -444,12 +466,12 @@ class HomeTab extends StatelessWidget {
         ),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           const Text('Ввести кількість годин',
-            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
+            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: Colors.white)),
           const SizedBox(height: 16),
           TextField(
             controller: ctrl, autofocus: true,
             keyboardType: TextInputType.number, textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 32),
+            style: const TextStyle(fontSize: 32, color: Colors.white),
             decoration: InputDecoration(
               filled: true, fillColor: const Color(0xFF1C1C22),
               border: OutlineInputBorder(
@@ -463,6 +485,7 @@ class HomeTab extends StatelessWidget {
             Expanded(child: OutlinedButton(
               onPressed: () => Navigator.pop(context),
               style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFF6B6B80),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 side: const BorderSide(color: Color(0xFF2A2A35)),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -477,10 +500,11 @@ class HomeTab extends StatelessWidget {
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF7C5CFC),
+                foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              child: const Text('Зберегти'),
+              child: const Text('Зберегти', style: TextStyle(color: Colors.white)),
             )),
           ]),
         ]),
@@ -537,7 +561,7 @@ class StatsTab extends StatelessWidget {
                   style: TextStyle(fontSize: 11, color: Color(0xFFEF4444), fontWeight: FontWeight.w600)),
                 const SizedBox(height: 10),
                 Text.rich(TextSpan(
-                  style: const TextStyle(fontSize: 14, height: 1.6),
+                  style: const TextStyle(fontSize: 14, height: 1.6, color: Colors.white),
                   children: [
                     TextSpan(text: '${state.totalLost} год',
                       style: const TextStyle(color: Color(0xFFEF4444), fontWeight: FontWeight.w600)),
@@ -621,7 +645,7 @@ class HistoryTab extends StatelessWidget {
                     Text('${w.weekStart} — ${w.weekEnd}',
                       style: const TextStyle(fontSize: 12, color: Color(0xFF6B6B80))),
                     Text('${w.hours} / ${w.goal} год',
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white)),
                   ])),
                   Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
                     Text(w.full ? '✓ виконано' : '✗ ${w.lost} год недобрано',
@@ -658,7 +682,7 @@ class SettingsTab extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 8),
               child: Row(children: [
                 const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('Годин на тиждень', style: TextStyle(fontSize: 15)),
+                  Text('Годин на тиждень', style: TextStyle(fontSize: 15, color: Colors.white)),
                   SizedBox(height: 2),
                   Text('Мінімум для виконання норми',
                     style: TextStyle(fontSize: 12, color: Color(0xFF6B6B80))),
@@ -668,7 +692,7 @@ class SettingsTab extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: Text('${state.goal}',
-                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
+                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: Colors.white)),
                   ),
                   _iconBtn(Icons.add, () => state.setGoal(state.goal + 1)),
                 ]),
@@ -682,7 +706,7 @@ class SettingsTab extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 8),
               child: Row(children: [
                 const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('Скинути всі дані', style: TextStyle(fontSize: 15)),
+                  Text('Скинути всі дані', style: TextStyle(fontSize: 15, color: Colors.white)),
                   SizedBox(height: 2),
                   Text('Незворотна дія', style: TextStyle(fontSize: 12, color: Color(0xFF6B6B80))),
                 ])),
@@ -692,8 +716,9 @@ class SettingsTab extends StatelessWidget {
                       context: context,
                       builder: (_) => AlertDialog(
                         backgroundColor: const Color(0xFF141417),
-                        title: const Text('Скинути дані?'),
-                        content: const Text('Всі записи будуть видалені назавжди.'),
+                        title: const Text('Скинути дані?', style: TextStyle(color: Colors.white)),
+                        content: const Text('Всі записи будуть видалені назавжди.',
+                          style: TextStyle(color: Color(0xFF6B6B80))),
                         actions: [
                           TextButton(onPressed: () => Navigator.pop(context, false),
                             child: const Text('Скасувати')),
@@ -710,7 +735,7 @@ class SettingsTab extends StatelessWidget {
                     foregroundColor: const Color(0xFFEF4444),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   ),
-                  child: const Text('Скинути'),
+                  child: const Text('Скинути', style: TextStyle(color: Color(0xFFEF4444))),
                 ),
               ]),
             ),
@@ -729,7 +754,7 @@ class SettingsTab extends StatelessWidget {
         border: Border.all(color: const Color(0xFF2A2A35)),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Icon(icon, size: 18),
+      child: Icon(icon, size: 18, color: Colors.white),
     ),
   );
 }

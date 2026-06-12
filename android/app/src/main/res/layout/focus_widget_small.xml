@@ -33,10 +33,9 @@
             android:layout_weight="1"
             android:text="0 / 10 год"
             android:textColor="#FF9D7DFF"
-            android:textSize="12sp"
-            android:fontFamily="monospace"/>
+            android:textSize="12sp"/>
 
-        <Button
+        <TextView
             android:id="@+id/widget_btn_add"
             android:layout_width="wrap_content"
             android:layout_height="28dp"
@@ -44,7 +43,9 @@
             android:textSize="12sp"
             android:textColor="#FFFFFFFF"
             android:background="@drawable/btn_bg"
+            android:gravity="center"
             android:paddingLeft="12dp"
-            android:paddingRight="12dp"/>
+            android:paddingRight="12dp"
+            android:clickable="true"/>
     </LinearLayout>
 </LinearLayout>

@@ -7,7 +7,6 @@
     android:background="@drawable/widget_bg"
     android:padding="14dp">
 
-    <!-- Header: week dates -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -20,7 +19,6 @@
             android:text="ЦЬОГО ТИЖНЯ"
             android:textColor="#FF6B6B80"
             android:textSize="9sp"
-            android:letterSpacing="0.1"
             android:textAllCaps="true"/>
         <TextView
             android:id="@+id/widget_large_dates"
@@ -28,11 +26,9 @@
             android:layout_height="wrap_content"
             android:text="пн — нд"
             android:textColor="#FF6B6B80"
-            android:textSize="10sp"
-            android:fontFamily="monospace"/>
+            android:textSize="10sp"/>
     </LinearLayout>
 
-    <!-- Progress row -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -46,8 +42,7 @@
             android:text="0"
             android:textColor="#FFE8E8F0"
             android:textSize="32sp"
-            android:textStyle="bold"
-            android:fontFamily="monospace"/>
+            android:textStyle="bold"/>
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -60,8 +55,7 @@
             android:layout_height="wrap_content"
             android:text="10"
             android:textColor="#FF6B6B80"
-            android:textSize="20sp"
-            android:fontFamily="monospace"/>
+            android:textSize="20sp"/>
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -70,7 +64,6 @@
             android:textSize="12sp"/>
     </LinearLayout>
 
-    <!-- Progress bar -->
     <ProgressBar
         android:id="@+id/widget_large_bar"
         style="?android:attr/progressBarStyleHorizontal"
@@ -81,7 +74,6 @@
         android:max="100"
         android:progress="0"/>
 
-    <!-- Risk text -->
     <TextView
         android:id="@+id/widget_large_risk"
         android:layout_width="match_parent"
@@ -92,7 +84,6 @@
         android:textSize="11sp"
         android:textStyle="bold"/>
 
-    <!-- Divider -->
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
@@ -100,7 +91,6 @@
         android:layout_marginBottom="8dp"
         android:background="#FF2A2A35"/>
 
-    <!-- All time stats -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -114,7 +104,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="✅ Використано"
+                android:text="Використано"
                 android:textColor="#FF6B6B80"
                 android:textSize="9sp"/>
             <TextView
@@ -124,8 +114,7 @@
                 android:text="0 год"
                 android:textColor="#FF22C55E"
                 android:textSize="13sp"
-                android:textStyle="bold"
-                android:fontFamily="monospace"/>
+                android:textStyle="bold"/>
         </LinearLayout>
 
         <LinearLayout
@@ -136,7 +125,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="❌ Втрачено"
+                android:text="Втрачено"
                 android:textColor="#FF6B6B80"
                 android:textSize="9sp"/>
             <TextView
@@ -146,8 +135,7 @@
                 android:text="0 год"
                 android:textColor="#FFEF4444"
                 android:textSize="13sp"
-                android:textStyle="bold"
-                android:fontFamily="monospace"/>
+                android:textStyle="bold"/>
         </LinearLayout>
 
         <LinearLayout
@@ -158,7 +146,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="⚡ Понад норму"
+                android:text="Понад норму"
                 android:textColor="#FF6B6B80"
                 android:textSize="9sp"/>
             <TextView
@@ -168,12 +156,11 @@
                 android:text="0 год"
                 android:textColor="#FFF59E0B"
                 android:textSize="13sp"
-                android:textStyle="bold"
-                android:fontFamily="monospace"/>
+                android:textStyle="bold"/>
         </LinearLayout>
     </LinearLayout>
 
-    <!-- Buttons -->
+    <!-- Buttons as TextView - MIUI compatible -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -181,7 +168,7 @@
         android:layout_marginTop="10dp"
         android:gravity="center_vertical">
 
-        <Button
+        <TextView
             android:id="@+id/widget_large_btn_add"
             android:layout_width="0dp"
             android:layout_height="32dp"
@@ -189,9 +176,11 @@
             android:text="+ 1 година"
             android:textSize="12sp"
             android:textColor="#FFFFFFFF"
-            android:background="@drawable/btn_bg"/>
+            android:background="@drawable/btn_bg"
+            android:gravity="center"
+            android:clickable="true"/>
 
-        <Button
+        <TextView
             android:id="@+id/widget_large_btn_open"
             android:layout_width="wrap_content"
             android:layout_height="32dp"
@@ -199,6 +188,10 @@
             android:text="відкрити →"
             android:textSize="11sp"
             android:textColor="#FF9D7DFF"
-            android:background="@drawable/btn_outline_bg"/>
+            android:background="@drawable/btn_outline_bg"
+            android:gravity="center"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:clickable="true"/>
     </LinearLayout>
 </LinearLayout>
