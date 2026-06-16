@@ -37,6 +37,7 @@ public class FocusWidgetLarge extends AppWidgetProvider {
     }
 
     static void updateWidget(Context context, AppWidgetManager manager, int widgetId) {
+        WeekManager.closeWeekIfNeeded(context);
         SharedPreferences prefs = context.getSharedPreferences(
             FocusWidgetSmall.PREFS_NAME, Context.MODE_PRIVATE);
 

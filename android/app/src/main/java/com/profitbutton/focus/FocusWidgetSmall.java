@@ -38,13 +38,16 @@ public class FocusWidgetSmall extends AppWidgetProvider {
     }
 
     static void addHour(Context context) {
+        // СПЕРШУ закриваємо старий тиждень якщо настав новий — інакше
+        // година зарахується як понаднормова за минулий тиждень.
+        WeekManager.closeWeekIfNeeded(context);
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        // Flutter stores as "flutter." prefix
         int current = (int) prefs.getLong("flutter.currentHours", 0);
         prefs.edit().putLong("flutter.currentHours", current + 1).apply();
     }
 
     static void updateWidget(Context context, AppWidgetManager manager, int widgetId) {
+        WeekManager.closeWeekIfNeeded(context);
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         int currentHours = (int) prefs.getLong("flutter.currentHours", 0);
         int goal = (int) prefs.getLong("flutter.goal", 10);
